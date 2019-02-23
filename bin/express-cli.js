@@ -55,6 +55,7 @@ program
   .option('-v, --view <engine>', 'add view <engine> support (dust|ejs|hbs|hjs|jade|pug|twig|vash) (defaults to jade)')
   .option('    --no-view', 'use static html instead of view engine')
   .option('-c, --css <engine>', 'add stylesheet <engine> support (less|stylus|compass|sass) (defaults to plain css)')
+  .option('    --ecma <version>', 'use specified ECMA version (vanilla|2018) (defaults to vanilla)')
   .option('    --git', 'add .gitignore')
   .option('-f, --force', 'force on non-empty directory')
   .parse(process.argv)
@@ -151,8 +152,18 @@ function createApplication (name, dir) {
   }
 
   // JavaScript
-  var app = loadTemplate('js/app.js')
-  var www = loadTemplate('js/www')
+  var app
+  var www
+  switch (program.ecma) {
+    case '2018':
+      app = loadTemplate('js/es2018/app.js')
+      www = loadTemplate('js/es2018/www')
+      break
+    default:
+      app = loadTemplate('js/vanilla/app.js')
+      www = loadTemplate('js/vanilla/www')
+      break
+  }
 
   // App name
   www.locals.name = name
@@ -207,7 +218,14 @@ function createApplication (name, dir) {
 
   // copy route templates
   mkdir(dir, 'routes')
-  copyTemplateMulti('js/routes', dir + '/routes', '*.js')
+  switch (program.ecma) {
+    case '2018':
+      copyTemplateMulti('js/es2018/routes', dir + '/routes', '*.js')
+      break
+    default:
+      copyTemplateMulti('js/vanilla/routes', dir + '/routes', '*.js')
+      break
+  }
 
   if (program.view) {
     // Copy view templates
